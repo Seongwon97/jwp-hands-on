@@ -36,5 +36,19 @@ class ConcurrencyTest {
         // 이미 gugu로 가입한 사용자가 있어서 UserServlet.join() 메서드의 if절 조건은 false가 되고 크기는 1이다.
         // 하지만 디버거로 개별 스레드를 일시 중지하면 if절 조건이 true가 되고 크기가 2가 된다. 왜 그럴까?
         assertThat(userServlet.getUsers()).hasSize(1);
+
+        /*
+        생각 정리
+        Thread의 join()메서드는 메서드 실행 이전에 위차한 명령(코드)에 대해서는 모두 실행시키도록 한다.
+        즉, main thread를 비롯한 다른 Thread들은 join을 걸어둔 thread가 종료되기 전까지 기다리고 해당 쓰레드의 작업이 끝난 이후에야 이후의 코드들을 실행하게 된다.
+
+        Debugiing breakpoint를 걸어둔 위치를 살펴보면 유저가 포함되었는지 체크하는 로직 이후 유저를 저장하는 로직에 걸었을 때 같은 user가 중복되게 저장되는
+        문제가 발생하게 된다. 앞의 이론과 이러한 현상을 살펴보면 secondThread가 join이 걸린 부분은 firstThread와 secondThread가 모두 start된 이후이다.
+        즉, secondThread가 종료되기 이전에 firseThread는 종료되어도 된다. 하지만 여기서 thread가 수행하는 작업에 breakpoint가 걸리다보니
+        두 메서드 모두 if문 체크를 통과한 후 user가 추가하기 전 상태로 싱크가 맞춰져서 두 유저가 추가되게 되었다.
+
+        breakpoint를 걸지 않은 경우 통과되는 이유는 secondThread가 끝나기 이전에 firstTread가 언제 실행될지는 알 수가 없어서
+        둘 사이의 메서드 실행 싱크가 맞을 일은 없어서 통과되게 된다.
+         */
     }
 }
